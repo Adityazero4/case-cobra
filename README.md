@@ -44,3 +44,6 @@ Tech Used:
 5. ShadCn
 6. Lucid React Icons
 7. Upload thing- service like s3
+8. nenontech - serverless postgres sql
+9. Prisma
+10. HeadlessUI
