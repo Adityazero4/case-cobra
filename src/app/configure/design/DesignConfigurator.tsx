@@ -28,8 +28,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckIcon, ChevronsUpDown } from "lucide-react";
-import { format } from "path";
 import { BASE_PRICE } from "@/config/products";
+import { useUploadThing } from "@/lib/uploadthing";
+import { useToast } from "@/components/ui/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import {
+  SaveConfigArgs,
+  saveConfig as _saveConfig,
+} from "@/app/configure/design/action";
+import { useRouter } from "next/navigation";
 
 interface DesignConfiguratorProps {
   configId: string;
@@ -68,6 +75,26 @@ const DesignConfigurator = ({
   });
   const phoneCaseRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { startUpload } = useUploadThing("imageUploader");
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const { mutate: saveConfig } = useMutation({
+    mutationKey: ["saveConfig"],
+    mutationFn: async (args: SaveConfigArgs) => {
+      await Promise.all([_saveConfig(args), saveCongiguration()]);
+    },
+    onError: (err) => {
+      toast({
+        title: "Something went wrong",
+        description: "There was a error on our end, please try again",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      router.push(`/configure/preview?id=${configId}`);
+    },
+  });
 
   async function saveCongiguration() {
     try {
@@ -94,7 +121,41 @@ const DesignConfigurator = ({
       const userImage = new Image();
       userImage.crossOrigin = "anonymous";
       userImage.src = imageUrl;
-    } catch (err) {}
+      await new Promise((resolve) => {
+        userImage.onload = resolve;
+      });
+      ctx?.drawImage(
+        userImage,
+        actualX,
+        actualY,
+        renderedDimensions.width,
+        renderedDimensions.height
+      );
+      const base64 = canvas.toDataURL();
+      const base64Data = base64.split(",")[1];
+
+      const blob = base64toBlob(base64Data, "image/png");
+      const file = new File([blob], "filename.png", { type: "image/png" });
+
+      const res = await startUpload([file], { configId });
+    } catch (err) {
+      toast({
+        title: "Something went wrong",
+        description:
+          "There was a problem saving your config, please try again later",
+        variant: "destructive",
+      });
+    }
+  }
+
+  function base64toBlob(base64: string, mimeType: string) {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
   }
 
   return (
@@ -336,7 +397,13 @@ const DesignConfigurator = ({
                     100
                 )}
               </p>
-              <Button className="w-full" size={"sm"}>
+              <Button
+                className="w-full"
+                size={"sm"}
+                onClick={() => {
+                  saveCongiguration();
+                }}
+              >
                 Continue <ArrowRight className="h-4 w-4 ml-1.5 inline" />
               </Button>
             </div>

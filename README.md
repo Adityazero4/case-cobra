@@ -47,3 +47,4 @@ Tech Used:
 8. nenontech - serverless postgres sql
 9. Prisma
 10. HeadlessUI
+11. React Query
