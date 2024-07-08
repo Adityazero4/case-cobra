@@ -1,54 +1,45 @@
-//bg-blue-950 border-blue-950
-//bg-zinc-900 border-zinc-900
-//bg-rose-950 border-rose-950
+// bg-blue-950 border-blue-950
+// bg-zinc-900 border-zinc-900
+// bg-rose-950 border-rose-950
 
-import { PRODUCTS_PRICES } from "@/config/products";
-import { Description } from "@radix-ui/react-toast";
+import { PRODUCTS_PRICE } from "@/config/products";
 
 export const COLORS = [
-  {
-    label: "Black",
-    value: "black",
-    tw: "zinc-900",
-  },
+  { label: "Black", value: "black", tw: "zinc-900" },
   {
     label: "Blue",
     value: "blue",
     tw: "blue-950",
   },
-  {
-    label: "Rose",
-    value: "rose",
-    tw: "rose-950",
-  },
+  { label: "Rose", value: "rose", tw: "rose-950" },
 ] as const;
 
 export const MODELS = {
-  name: "modes",
+  name: "models",
   options: [
     {
-      label: "iphone X",
+      label: "iPhone X",
       value: "iphonex",
     },
     {
-      label: "iphone 11",
+      label: "iPhone 11",
       value: "iphone11",
     },
     {
-      label: "iphone 12",
-      value: "iphonex12",
+      label: "iPhone 12",
+      value: "iphone12",
     },
     {
-      label: "iphone 13",
-      value: "iphonex13",
+      label: "iPhone 13",
+      value: "iphone13",
     },
     {
-      label: "iphone 14",
-      value: "iphonex14",
+      label: "iPhone 14",
+      value: "iphone14",
     },
     {
-      label: "iphone 15",
-      value: "iphonex15",
+      label: "iPhone 15",
+      value: "iphone15",
     },
   ],
 } as const;
@@ -60,13 +51,13 @@ export const MATERIALS = {
       label: "Silicone",
       value: "silicone",
       description: undefined,
-      price: PRODUCTS_PRICES.material.silicone,
+      price: PRODUCTS_PRICE.material.silicone,
     },
     {
       label: "Soft Polycarbonate",
       value: "polycarbonate",
       description: "Scratch-resistant coating",
-      price: PRODUCTS_PRICES.material.polycabonate,
+      price: PRODUCTS_PRICE.material.polycarbonate,
     },
   ],
 } as const;
@@ -78,13 +69,13 @@ export const FINISHES = {
       label: "Smooth Finish",
       value: "smooth",
       description: undefined,
-      price: PRODUCTS_PRICES.finish.smooth,
+      price: PRODUCTS_PRICE.finish.smooth,
     },
     {
       label: "Textured Finish",
       value: "textured",
       description: "Soft grippy texture",
-      price: PRODUCTS_PRICES.finish.textured,
+      price: PRODUCTS_PRICE.finish.textured,
     },
   ],
 } as const;

@@ -37,6 +37,7 @@ import {
   saveConfig as _saveConfig,
 } from "@/app/configure/design/action";
 import { useRouter } from "next/navigation";
+import { color } from "framer-motion";
 
 interface DesignConfiguratorProps {
   configId: string;
@@ -79,7 +80,7 @@ const DesignConfigurator = ({
   const { toast } = useToast();
   const router = useRouter();
 
-  const { mutate: saveConfig } = useMutation({
+  const { mutate: saveConfig, isPending } = useMutation({
     mutationKey: ["saveConfig"],
     mutationFn: async (args: SaveConfigArgs) => {
       await Promise.all([_saveConfig(args), saveCongiguration()]);
@@ -161,23 +162,23 @@ const DesignConfigurator = ({
   return (
     <div className="relative mt-20 grid grid-cols-1 lg:grid-cols-3 mb-20 pb-20">
       <div
-        className="relative h-[37.5rem] overflow-hidden cols-span-2 w-full max-w-4xl flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         ref={containerRef}
+        className="relative h-[37.5rem] overflow-hidden col-span-2 w-full max-w-4xl flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
       >
         <div className="relative w-60 bg-opacity-50 pointer-events-none aspect-[896/1831]">
           <AspectRatio
+            ref={phoneCaseRef}
             ratio={896 / 1831}
             className="pointer-events-none relative z-50 aspect-[896/1831] w-full"
-            ref={phoneCaseRef}
           >
             <NextImage
+              fill
               alt="phone image"
               src="/phone-template.png"
-              fill
-              className="pointer-events-none z-50 select-none "
+              className="pointer-events-none z-50 select-none"
             />
           </AspectRatio>
-          <div className="absolute z-40 inset-0 left-[3px] top-px right-3px bottom-px rounded-[32px] shadow-[0_0_0_99999px_rgba(229,231,235,0.6)]" />
+          <div className="absolute z-40 inset-0 left-[3px] top-px right-[3px] bottom-px rounded-[32px] shadow-[0_0_0_99999px_rgba(229,231,235,0.6)]" />
           <div
             className={cn(
               "absolute inset-0 left-[3px] top-px right-[3px] bottom-px rounded-[32px]",
@@ -190,8 +191,20 @@ const DesignConfigurator = ({
           default={{
             x: 150,
             y: 205,
-            width: imageDimensions.height / 4,
-            height: imageDimensions.width / 4,
+            height: imageDimensions.height / 4,
+            width: imageDimensions.width / 4,
+          }}
+          onResizeStop={(_, __, ref, ___, { x, y }) => {
+            setRenderedDimensions({
+              height: parseInt(ref.style.height.slice(0, -2)),
+              width: parseInt(ref.style.width.slice(0, -2)),
+            });
+
+            setRenderedPosition({ x, y });
+          }}
+          onDragStop={(_, data) => {
+            const { x, y } = data;
+            setRenderedPosition({ x, y });
           }}
           className="absolute z-20 border-[3px] border-primary"
           lockAspectRatio
@@ -201,31 +214,19 @@ const DesignConfigurator = ({
             topRight: <HandleComponent />,
             topLeft: <HandleComponent />,
           }}
-          onResizeStop={(_, __, ref, ____, { x, y }) => {
-            setRenderedDimensions({
-              width: parseInt(ref.style.width.slice(0, -2)),
-              height: parseInt(ref.style.height.slice(0, -2)),
-            });
-            setRenderedPosition({ x, y });
-          }}
-          onDragStop={(_, data) => {
-            const { x, y } = data;
-            setRenderedPosition({ x, y });
-          }}
         >
-          <div className="relative h-full w-full">
+          <div className="relative w-full h-full">
             <NextImage
               src={imageUrl}
-              alt="your image"
               fill
+              alt="your image"
               className="pointer-events-none"
             />
           </div>
         </Rnd>
       </div>
 
-      <div className="h-[37.5rem] w-full col-span-full mt-6 lg:col-span-1 lg:mt-0 flex flex-col bg-white">
-        <div className="h-px w-full bg-zinc-200 flex lg:hidden" />
+      <div className="h-[37.5rem] w-full col-span-full lg:col-span-1 flex flex-col bg-white lg:mt-0">
         <ScrollArea className="relative flex-1 overflow-auto">
           <div
             aria-hidden="true"
@@ -235,10 +236,12 @@ const DesignConfigurator = ({
             aria-hidden="true"
             className="absolute z-10 inset-x-0 top-0 h-12 bg-gradient-to-b from-white pointer-events-none"
           />
+
           <div className="px-8 pb-12 pt-8">
             <h2 className="tracking-tight font-bold text-3xl">
-              Customise your case
+              Customize your case
             </h2>
+
             <div className="w-full h-px bg-zinc-200 my-6" />
 
             <div className="relative mt-4 h-full flex flex-col justify-between">
@@ -246,7 +249,10 @@ const DesignConfigurator = ({
                 <RadioGroup
                   value={options.color}
                   onChange={(val) => {
-                    setOptions((prev) => ({ ...prev, color: val }));
+                    setOptions((prev) => ({
+                      ...prev,
+                      color: val,
+                    }));
                   }}
                 >
                   <Label>Color: {options.color.label}</Label>
@@ -259,7 +265,7 @@ const DesignConfigurator = ({
                           cn(
                             "relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 active:ring-0 focus:ring-0 active:outline-none focus:outline-none border-2 border-transparent",
                             {
-                              [`border-${color.tw}`]: checked || focus,
+                              [`border-${color.tw}`]: focus || checked,
                             }
                           )
                         }
@@ -269,31 +275,31 @@ const DesignConfigurator = ({
                             `bg-${color.tw}`,
                             "h-8 w-8 rounded-full border border-black border-opacity-10"
                           )}
-                        ></span>
+                        />
                       </Radio>
                     ))}
                   </div>
                 </RadioGroup>
 
-                <div className="relative flex flex-col w-full gap-3">
+                <div className="relative flex flex-col gap-3 w-full">
                   <Label>Model</Label>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        variant={"outline"}
+                        variant="outline"
                         role="combobox"
-                        className="w-full justify-between focus:outline-none focus-visible:ring-0"
+                        className="w-full justify-between"
                       >
                         {options.model.label}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-full mt-2">
+                    <DropdownMenuContent>
                       {MODELS.options.map((model) => (
                         <DropdownMenuItem
                           key={model.label}
                           className={cn(
-                            "flex text-sm gap-1 p-1.5 items-center cursor-default hover:bg-zinc-100",
+                            "flex text-sm gap-1 items-center p-1.5 cursor-default hover:bg-zinc-100",
                             {
                               "bg-zinc-100":
                                 model.label === options.model.label,
@@ -305,7 +311,7 @@ const DesignConfigurator = ({
                         >
                           <CheckIcon
                             className={cn(
-                              "mr-2 w-4 h-4 text-primary",
+                              "mr-2 h-4 w-4 text-primary",
                               model.label === options.model.label
                                 ? "opacity-100"
                                 : "opacity-0"
@@ -326,7 +332,6 @@ const DesignConfigurator = ({
                       onChange={(val) => {
                         setOptions((prev) => ({
                           ...prev,
-                          //name can be material or finish
                           [name]: val,
                         }));
                       }}
@@ -341,36 +346,38 @@ const DesignConfigurator = ({
                             value={option}
                             className={({ focus, checked }) =>
                               cn(
-                                "relative cursor-pointer rounded-lg block bg-white px-6 py-4 shadow-sm border-2 border-zinc-200 ring-0 focus:ring-0 sm:flex sm:justify-between focus:outline-none",
+                                "relative block cursor-pointer rounded-lg bg-white px-6 py-4 shadow-sm border-2 border-zinc-200 focus:outline-none ring-0 focus:ring-0 outline-none sm:flex sm:justify-between",
                                 {
-                                  "border-primary": checked || focus,
+                                  "border-primary": focus || checked,
                                 }
                               )
                             }
                           >
                             <span className="flex items-center">
                               <span className="flex flex-col text-sm">
-                                <RadioGroupLabel className="font-md text-gray-900">
+                                <RadioGroupLabel
+                                  className="font-medium text-gray-900"
+                                  as="span"
+                                >
                                   {option.label}
                                 </RadioGroupLabel>
-                                {option.description && (
+
+                                {option.description ? (
                                   <Description
                                     as="span"
-                                    className="text-gray-500 "
+                                    className="text-gray-500"
                                   >
                                     <span className="block sm:inline">
                                       {option.description}
                                     </span>
                                   </Description>
-                                )}
+                                ) : null}
                               </span>
                             </span>
 
                             <Description
                               as="span"
-                              className={
-                                "mt-2 flex text-sm sm:ml-4 sm:mt-0 sm:flex-col sm:text-right"
-                              }
+                              className="mt-2 flex text-sm sm:ml-4 sm:mt-0 sm:flex-col sm:text-right"
                             >
                               <span className="font-medium text-gray-900">
                                 {formatPrice(option.price / 100)}
@@ -393,18 +400,28 @@ const DesignConfigurator = ({
             <div className="w-full flex gap-6 items-center">
               <p className="font-medium whitespace-nowrap">
                 {formatPrice(
-                  (BASE_PRICE + options.material.price + options.finish.price) /
+                  (BASE_PRICE + options.finish.price + options.material.price) /
                     100
                 )}
               </p>
               <Button
+                disabled={isPending}
+                loadingText="Saving..."
+                isLoading={isPending}
+                onClick={() =>
+                  saveConfig({
+                    configId,
+                    color: options.color.value,
+                    finish: options.finish.value,
+                    material: options.material.value,
+                    model: options.model.value,
+                  })
+                }
+                size="sm"
                 className="w-full"
-                size={"sm"}
-                onClick={() => {
-                  saveCongiguration();
-                }}
               >
-                Continue <ArrowRight className="h-4 w-4 ml-1.5 inline" />
+                Continue
+                <ArrowRight className="h-4 w-4 ml-1.5 inline" />
               </Button>
             </div>
           </div>
