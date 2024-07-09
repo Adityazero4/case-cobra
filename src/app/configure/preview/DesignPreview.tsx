@@ -4,22 +4,30 @@ import Phone from "@/components/Phone";
 import { Button } from "@/components/ui/button";
 import { BASE_PRICE, PRODUCTS_PRICE } from "@/config/products";
 import { cn, formatPrice } from "@/lib/utils";
-import { COLORS, FINISHES, MODELS } from "@/validators/option.validator";
-import { Configurations } from "@prisma/client";
+import { COLORS, MODELS } from "@/validators/option.validator";
+import { Configuration } from "@prisma/client";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, Check } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import Condfetti from "react-dom-confetti";
+import { createCheckoutSession } from "./action";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import LoginSheet from "@/components/LoginSheet";
 
-const DesignPreview = ({
-  configuration,
-}: {
-  configuration: Configurations;
-}) => {
-  const [shwoConfetti, setShowConfetti] = useState(false);
+const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
+  const [shwoConfetti, setShowConfetti] = useState<boolean>(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  const { user } = useKindeBrowserClient();
+  const { id } = configuration;
+
   useEffect(() => {
     setShowConfetti(true);
   }, []);
+
   const { color, model, finish, material } = configuration;
   const tw = COLORS.find(
     (supportedColor) => supportedColor?.value === color
@@ -37,10 +45,34 @@ const DesignPreview = ({
     totalPrice += PRODUCTS_PRICE.finish.textured;
   }
 
-  const {} = useMutation({
+  const { mutate: createPaymentSession } = useMutation({
     mutationKey: ["get-checkout-session"],
+    mutationFn: createCheckoutSession,
+    onSuccess: ({ url }) => {
+      if (url) {
+        router.push(url);
+      } else {
+        throw new Error("Unable to retrieve payment URL");
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Something went wrong",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
+  const handleCheckout = () => {
+    if (user) {
+      console.log("user", user);
+      createPaymentSession({ configId: id });
+    } else {
+      localStorage.setItem("configurationId", id);
+      setIsLoginModalOpen(true);
+    }
+  };
   return (
     <>
       <div
@@ -51,10 +83,17 @@ const DesignPreview = ({
           active={shwoConfetti}
           config={{
             elementCount: 200,
-            spread: 180,
+            spread: 360,
           }}
         />
       </div>
+
+      <LoginSheet
+        open={isLoginModalOpen}
+        setOpen={setIsLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
+
       <div className="mt-20 grid grid-cols-1 text-sm sm:grid-cols-12 sm:grid-rows-1 sm:gap-x-6 md:gap-x-8 lg:gap-x-12">
         <div className="sm:col-span-4 md:col-span-3 md:row-span-2 md:row-end-2">
           <Phone
@@ -128,7 +167,10 @@ const DesignPreview = ({
               </div>
             </div>
             <div className="mt-8 flex justify-end pb-12">
-              <Button className="px-4 sm:px-6 lg:px-8">
+              <Button
+                className="px-4 sm:px-6 lg:px-8"
+                onClick={() => handleCheckout()}
+              >
                 Check out
                 <ArrowRight className="w-4 h-4 ml-1.5 inline" />
               </Button>

@@ -13,7 +13,7 @@ const page = async ({ searchParams }: PageProps) => {
     return notFound();
   }
 
-  const configuration = await db.configurations.findUnique({
+  const configuration = await db.configuration.findUnique({
     where: { id },
   });
 
@@ -21,13 +21,13 @@ const page = async ({ searchParams }: PageProps) => {
     return notFound();
   }
 
-  const { imgUrl, height, width } = configuration;
+  const { imageUrl, height, width } = configuration;
 
   return (
     <DesignConfigurator
       configId={configuration.id}
       imageDimensions={{ width, height }}
-      imageUrl={imgUrl}
+      imageUrl={imageUrl}
     />
   );
 };
